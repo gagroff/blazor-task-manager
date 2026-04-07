@@ -1,0 +1,125 @@
+@page "/tasks"
+@rendermode InteractiveServer
+@using TaskManager.Models
+@using TaskManager.Services
+@inject ITaskService TaskService
+
+<PageTitle>Tasks</PageTitle>
+
+<h1>Tasks</h1>
+<p>Track work items, due dates, and completion status.</p>
+
+<div class="card p-3 mb-4">
+    <h2 class="h5">Add Task</h2>
+
+    <EditForm Model="newTask" OnValidSubmit="AddTaskAsync" class="row g-3">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="col-12">
+            <label class="form-label" for="title">Title</label>
+            <InputText id="title" class="form-control" @bind-Value="newTask.Title" />
+            <ValidationMessage For="() => newTask.Title" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label" for="description">Description</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="newTask.Description" />
+            <ValidationMessage For="() => newTask.Description" />
+        </div>
+
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="dueDate">Due Date</label>
+            <InputDate id="dueDate" class="form-control" @bind-Value="newTask.DueDate" />
+            <ValidationMessage For="() => newTask.DueDate" />
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Add Task</button>
+        </div>
+    </EditForm>
+</div>
+
+@if (tasks.Count == 0)
+{
+    <p>No tasks yet. Add your first task above.</p>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in tasks)
+            {
+                <tr class="@(task.IsCompleted ? "task-completed" : null)">
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@task.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (task.IsCompleted)
+                        {
+                            <span class="badge text-bg-success">Completed</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-warning">Open</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-success me-2"
+                                @onclick="() => MarkCompleteAsync(task.Id)"
+                                disabled="@task.IsCompleted">
+                            Complete
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTaskAsync(task.Id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<TaskItem> tasks = [];
+    private NewTaskInputModel newTask = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasksAsync();
+        newTask.DueDate = DateTime.Today;
+    }
+
+    private async Task LoadTasksAsync()
+    {
+        tasks = (await TaskService.GetAllAsync()).ToList();
+    }
+
+    private async Task AddTaskAsync()
+    {
+        await TaskService.AddAsync(newTask);
+        newTask = new NewTaskInputModel { DueDate = DateTime.Today };
+        await LoadTasksAsync();
+    }
+
+    private async Task MarkCompleteAsync(int id)
+    {
+        await TaskService.MarkCompleteAsync(id);
+        await LoadTasksAsync();
+    }
+
+    private async Task DeleteTaskAsync(int id)
+    {
+        await TaskService.DeleteAsync(id);
+        await LoadTasksAsync();
+    }
+}

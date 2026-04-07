@@ -1,0 +1,7 @@
+.task-completed td {
+    color: #6c757d;
+}
+
+.task-completed td:first-child {
+    text-decoration: line-through;
+}
