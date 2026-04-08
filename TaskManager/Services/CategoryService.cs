@@ -21,7 +21,7 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
         var category = new Category
         {
             Name = input.Name.Trim(),
-            Color = string.IsNullOrWhiteSpace(input.Color) ? null : input.Color.Trim()
+            Color = input.Color.Trim()
         };
 
         dbContext.Categories.Add(category);
@@ -40,7 +40,7 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
         }
 
         category.Name = input.Name.Trim();
-        category.Color = string.IsNullOrWhiteSpace(input.Color) ? null : input.Color.Trim();
+        category.Color = input.Color.Trim();
 
         await dbContext.SaveChangesAsync();
         return true;

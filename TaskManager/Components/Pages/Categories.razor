@@ -24,13 +24,8 @@
 
         <div class="col-12 col-md-3">
             <label class="form-label" for="catColor">Color</label>
-            <div class="input-group">
-                <InputText id="catColor" class="form-control" @bind-Value="categoryInput.Color" placeholder="#3B82F6" />
-                @if (!string.IsNullOrWhiteSpace(categoryInput.Color))
-                {
-                    <span class="input-group-text" style="background-color: @categoryInput.Color; width: 2.5rem;"></span>
-                }
-            </div>
+            <input type="color" id="catColor" class="form-control form-control-color w-100"
+                   title="Pick a color" @bind="categoryInput.Color" />
             <ValidationMessage For="() => categoryInput.Color" />
         </div>
 
@@ -128,7 +123,7 @@ else
         categoryInput = new NewCategoryInputModel
         {
             Name = category.Name,
-            Color = category.Color
+            Color = category.Color ?? "#3B82F6"
         };
     }
 
