@@ -10,6 +10,7 @@ public class TaskService(AppDbContext dbContext) : ITaskService
     {
         return await dbContext.Tasks
             .AsNoTracking()
+            .Include(task => task.Category)
             .OrderBy(task => task.IsCompleted)
             .ThenBy(task => task.DueDate)
             .ThenBy(task => task.CreatedAtUtc)
@@ -24,7 +25,8 @@ public class TaskService(AppDbContext dbContext) : ITaskService
             Description = string.IsNullOrWhiteSpace(input.Description) ? null : input.Description.Trim(),
             DueDate = input.DueDate!.Value.Date,
             IsCompleted = false,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = DateTime.UtcNow,
+            CategoryId = input.CategoryId
         };
 
         dbContext.Tasks.Add(task);

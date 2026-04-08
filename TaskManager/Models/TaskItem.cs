@@ -19,4 +19,8 @@ public class TaskItem
     public bool IsCompleted { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public int? CategoryId { get; set; }
+
+    public Category? Category { get; set; }
 }

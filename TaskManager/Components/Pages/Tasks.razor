@@ -3,6 +3,7 @@
 @using TaskManager.Models
 @using TaskManager.Services
 @inject ITaskService TaskService
+@inject ICategoryService CategoryService
 
 <PageTitle>Tasks</PageTitle>
 
@@ -34,6 +35,17 @@
             <ValidationMessage For="() => newTask.DueDate" />
         </div>
 
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="category">Category</label>
+            <InputSelect id="category" class="form-select" @bind-Value="newTask.CategoryId">
+                <option value="">— None —</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+        </div>
+
         <div class="col-12">
             <button type="submit" class="btn btn-primary">Add Task</button>
         </div>
@@ -52,6 +64,7 @@ else
                 <th>Title</th>
                 <th>Description</th>
                 <th>Due Date</th>
+                <th>Category</th>
                 <th>Status</th>
                 <th class="text-end">Actions</th>
             </tr>
@@ -63,6 +76,15 @@ else
                     <td>@task.Title</td>
                     <td>@task.Description</td>
                     <td>@task.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (task.Category is not null)
+                        {
+                            <span class="badge"
+                                  style="background-color: @(task.Category.Color ?? "#6c757d"); color: #fff;">
+                                @task.Category.Name
+                            </span>
+                        }
+                    </td>
                     <td>
                         @if (task.IsCompleted)
                         {
@@ -91,12 +113,19 @@ else
 
 @code {
     private List<TaskItem> tasks = [];
+    private List<Category> categories = [];
     private NewTaskInputModel newTask = new();
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadCategoriesAsync();
         await LoadTasksAsync();
         newTask.DueDate = DateTime.Today;
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        categories = (await CategoryService.GetAllAsync()).ToList();
     }
 
     private async Task LoadTasksAsync()
