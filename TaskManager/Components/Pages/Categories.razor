@@ -1,0 +1,146 @@
+@page "/categories"
+@rendermode InteractiveServer
+@using TaskManager.Models
+@using TaskManager.Services
+@inject ICategoryService CategoryService
+
+<PageTitle>Categories</PageTitle>
+
+<h1>Categories</h1>
+<p>Manage task categories to organize your work.</p>
+
+<div class="card p-3 mb-4">
+    <h2 class="h5">@(editingCategory is null ? "Add Category" : "Edit Category")</h2>
+
+    <EditForm Model="categoryInput" OnValidSubmit="SaveCategoryAsync" class="row g-3">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="col-12 col-md-5">
+            <label class="form-label" for="catName">Name</label>
+            <InputText id="catName" class="form-control" @bind-Value="categoryInput.Name" />
+            <ValidationMessage For="() => categoryInput.Name" />
+        </div>
+
+        <div class="col-12 col-md-3">
+            <label class="form-label" for="catColor">Color</label>
+            <div class="input-group">
+                <InputText id="catColor" class="form-control" @bind-Value="categoryInput.Color" placeholder="#3B82F6" />
+                @if (!string.IsNullOrWhiteSpace(categoryInput.Color))
+                {
+                    <span class="input-group-text" style="background-color: @categoryInput.Color; width: 2.5rem;"></span>
+                }
+            </div>
+            <ValidationMessage For="() => categoryInput.Color" />
+        </div>
+
+        <div class="col-12 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary">
+                @(editingCategory is null ? "Add Category" : "Save Changes")
+            </button>
+            @if (editingCategory is not null)
+            {
+                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+            }
+        </div>
+    </EditForm>
+</div>
+
+@if (categories.Count == 0)
+{
+    <p>No categories yet. Add your first category above.</p>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Color</th>
+                <th>Name</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in categories)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(category.Color))
+                        {
+                            <span class="badge" style="background-color: @category.Color; color: #fff; padding: .4em .7em;">
+                                &nbsp;
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">—</span>
+                        }
+                    </td>
+                    <td>@category.Name</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => StartEdit(category)">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategoryAsync(category.Id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Category> categories = [];
+    private NewCategoryInputModel categoryInput = new();
+    private Category? editingCategory;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAsync();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        categories = (await CategoryService.GetAllAsync()).ToList();
+    }
+
+    private async Task SaveCategoryAsync()
+    {
+        if (editingCategory is null)
+        {
+            await CategoryService.AddAsync(categoryInput);
+        }
+        else
+        {
+            await CategoryService.UpdateAsync(editingCategory.Id, categoryInput);
+        }
+
+        categoryInput = new NewCategoryInputModel();
+        editingCategory = null;
+        await LoadCategoriesAsync();
+    }
+
+    private void StartEdit(Category category)
+    {
+        editingCategory = category;
+        categoryInput = new NewCategoryInputModel
+        {
+            Name = category.Name,
+            Color = category.Color
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingCategory = null;
+        categoryInput = new NewCategoryInputModel();
+    }
+
+    private async Task DeleteCategoryAsync(int id)
+    {
+        await CategoryService.DeleteAsync(id);
+        await LoadCategoriesAsync();
+    }
+}

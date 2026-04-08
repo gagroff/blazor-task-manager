@@ -14,4 +14,6 @@ public class NewTaskInputModel
     [Required(ErrorMessage = "Due date is required.")]
     [DataType(DataType.Date)]
     public DateTime? DueDate { get; set; } = DateTime.Today;
+
+    public int? CategoryId { get; set; }
 }
